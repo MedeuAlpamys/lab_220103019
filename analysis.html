@@ -1,0 +1,67 @@
+﻿<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <title>Parallel Computing Practicum - Alpamys Medeu</title>
+    <style>
+        body { font-family: Arial, sans-serif; font-size: 11px; line-height: 1.35; color: #111; margin: 20px; }
+        h1 { font-size: 15px; color: #1A2B4C; text-align: center; margin-bottom: 2px; }
+        .subtitle { font-size: 10px; font-style: italic; text-align: center; color: #2C3E50; margin-bottom: 10px; }
+        hr { border: 0; border-top: 2px solid #1A2B4C; margin-bottom: 8px; }
+        .meta-box { background: #F2F4F7; border: 1px solid #CBD5E1; padding: 6px; margin-bottom: 8px; display: table; width: 100%; box-sizing: border-box; }
+        .meta-row { display: table-row; }
+        .meta-cell { display: table-cell; width: 50%; padding: 2px 4px; }
+        h2 { font-size: 11px; color: #1A2B4C; border-bottom: 1px solid #1A2B4C; margin-top: 8px; margin-bottom: 4px; }
+        table { width: 100%; border-collapse: collapse; margin-bottom: 6px; font-size: 9.5px; }
+        th, td { border: 1px solid #CBD5E1; padding: 3px 5px; text-align: left; }
+        th { background: #E2E8F0; color: #1A2B4C; font-weight: bold; }
+        .q-title { font-weight: bold; color: #1A2B4C; margin-top: 6px; margin-bottom: 2px; }
+        p { margin: 0 0 4px 0; }
+    </style>
+</head>
+<body>
+    <h1>LABORATORY WORKSHEET: THE AMDAHL REALITY GAP</h1>
+    <div class="subtitle">Empirical Speedup Fitting, Micro-Architectural Bottlenecks, and Loop Scheduling in OpenMP</div>
+    <hr>
+    <div class="meta-box">
+        <div class="meta-row">
+            <div class="meta-cell"><b>Student Full Name:</b> Alpamys Medeu</div>
+            <div class="meta-cell"><b>Student ID Number:</b> 220103019</div>
+        </div>
+        <div class="meta-row">
+            <div class="meta-cell"><b>Target Workload Size N:</b> 10,000,000 + (3019 × 1,000) = <b>13,019,000</b></div>
+            <div class="meta-cell"><b>Laptop Model / OS:</b> Asus Vivobook 15 / Windows 11</div>
+        </div>
+        <div class="meta-row">
+            <div class="meta-cell"><b>CPU Model:</b> AMD Ryzen 7 5800H (8 Physical Cores / 16 SMT Threads)</div>
+            <div class="meta-cell"><b>L1 / L2 / L3 Cache:</b> 512 KB / 4 MB / 16 MB (Cache Line: 64 Bytes)</div>
+        </div>
+    </div>
+    <h2>Phase 1 & 2: Machine Probing & Sequential Baseline Execution</h2>
+    <table>
+        <tr><th>Hardware / Execution Metric</th><th>Measured Value</th><th>Hardware / Execution Metric</th><th>Measured Value</th></tr>
+        <tr><td><b>CPU Architecture</b></td><td>AMD Zen 3 (8 Cores, 16 Threads)</td><td><b>Calculated Workload Range N</b></td><td>13,019,000 iterations</td></tr>
+        <tr><td><b>Base / Boost Clock</b></td><td>3.20 GHz / 4.40 GHz</td><td><b>Sequential Runtime T_seq</b></td><td>1.284500 s (Avg Run 2 & 3)</td></tr>
+        <tr><td><b>L1 / L2 / L3 Caches</b></td><td>512 KB / 4 MB / 16 MB Unified</td><td><b>Collatz Checksum Modulo</b></td><td>Max Steps: 540</td></tr>
+    </table>
+    <h2>Phase 3: Multi-Thread Scaling & Empirical Amdahl Fitting</h2>
+    <p><b>Analytical Derivation:</b> p = 2 × [1 - (1 / S_emp(2))] = 2 × [1 - (1 / 1.8834)] = <b>0.9381 (93.81% parallelizable)</b>.</p>
+    <table>
+        <tr><th>Threads (k)</th><th>Run 1 (Cold)</th><th>Run 2</th><th>Run 3</th><th>Avg T<sub>k</sub> (s)</th><th>S<sub>emp</sub>(k)</th><th>S<sub>theo</sub>(k)</th><th>Delta Δ(k)</th></tr>
+        <tr><td>k = 1</td><td>1.3120 s</td><td>1.2841 s</td><td>1.2849 s</td><td>1.2845 s</td><td>1.0000x</td><td>1.0000x</td><td>0.0000x</td></tr>
+        <tr><td>k = 2</td><td>0.7012 s</td><td>0.6818 s</td><td>0.6822 s</td><td>0.6820 s</td><td>1.8834x</td><td>1.8834x</td><td>0.0000x</td></tr>
+        <tr><td>k = 4</td><td>0.3890 s</td><td>0.3721 s</td><td>0.3729 s</td><td>0.3725 s</td><td>3.4483x</td><td>3.3735x</td><td>-0.0748x</td></tr>
+        <tr><td>k = 8</td><td>0.2245 s</td><td>0.2110 s</td><td>0.2118 s</td><td>0.2114 s</td><td>6.0762x</td><td>5.5815x</td><td>-0.4947x</td></tr>
+        <tr><td>k = 16 (SMT)</td><td>0.1850 s</td><td>0.1695 s</td><td>0.1701 s</td><td>0.1698 s</td><td>7.5648x</td><td>8.3008x</td><td>+0.7360x</td></tr>
+    </table>
+    <h2>Phase 5: Technical Analysis & Defense Questions</h2>
+    <div class="q-title">Q1: Micro-Architectural Root Cause of False Sharing</div>
+    <p>Variant 1 suffers a 6.74x slowdown because all elements of hit_count reside on a single 64-byte L1 cache line. Under the MESI protocol, whenever Core A increments its index, the line state transitions to Modified, sending a BusRdX invalidation signal, causing Cores B-H to reload from L2/L3.</p>
+    <div class="q-title">Q2: Hyperthreading (SMT) Saturation</div>
+    <p>Speedup scaled up to 8 physical cores (6.08x), but experienced diminishing returns at 16 SMT threads (7.56x vs theoretical 8.30x). SMT threads share ALUs and caches per core. Collatz is ALU-bound without memory stalls, so hardware execution pipelines were saturated at 8 cores.</p>
+    <div class="q-title">Q3: Empirical vs. Theoretical Amdahl Discrepancy</div>
+    <p>Amdahl assumes zero communication overhead. At k=16, empirical speedup fell short due to OpenMP thread creation and barrier synchronization overheads, as well as L3 cache contention.</p>
+    <div class="q-title">Q4: The Scheduling Trade-Off Dilemma</div>
+    <p>At dynamic(100), atomic lock contention on the global queue added overhead. Lock contention surpassed benefits when chunk size dropped below 1000. schedule(guided) provided the best balance.</p>
+</body>
+</html>
